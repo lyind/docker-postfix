@@ -67,6 +67,13 @@ while IFS=':' read -r _user _pwd; do
 done < /tmp/passwd
 chown postfix.sasl /etc/sasldb2
 
+# enable listening on port 25 (smtp) and 587 (submission)
+postconf -M smtp/inet="smtp         inet   n   -   n   -   -   smtpd"
+postconf -M submission/inet="submission   inet   n   -   n   -   -   smtpd"
+postconf -P "submission/inet/syslog_name=postfix/submission"
+postconf -P "submission/inet/smtpd_sasl_auth_enable=yes"
+postconf -P "submission/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination"
+
 ############
 # Enable TLS
 ############
@@ -76,12 +83,8 @@ if [[ -n "$(find /etc/postfix/certs -iname *.crt)" && -n "$(find /etc/postfix/ce
   postconf -e smtpd_tls_key_file=$(find /etc/postfix/certs -iname *.key)
   chmod 400 /etc/postfix/certs/*.*
   # /etc/postfix/master.cf
-  postconf -M submission/inet="submission   inet   n   -   n   -   -   smtpd"
-  postconf -P "submission/inet/syslog_name=postfix/submission"
   postconf -P "submission/inet/smtpd_tls_security_level=encrypt"
-  postconf -P "submission/inet/smtpd_sasl_auth_enable=yes"
   postconf -P "submission/inet/milter_macro_daemon_name=ORIGINATING"
-  postconf -P "submission/inet/smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination"
 fi
 
 #############
