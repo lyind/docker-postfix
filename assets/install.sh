@@ -11,21 +11,37 @@ cat > /etc/supervisor/conf.d/supervisord.conf <<EOF
 nodaemon=true
 
 [program:postfix]
-command=/opt/postfix.sh
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+command=/usr/sbin/postfix start-fg
 
 [program:rsyslog]
-command=/usr/sbin/rsyslogd -n -c3
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+command=/usr/sbin/rsyslogd -n -iNONE
 EOF
+
+#########
+# rsyslog
+#########
+cat > /etc/rsyslog.conf <<EOF
+module(load="imuxsock") # provides support for local system logging
+
+\$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+\$WorkDirectory /var/spool/rsyslog
+
+# Actions
+*.* -/dev/stdout # send everything to stdout
+EOF
+
 
 ############
 #  postfix
 ############
-cat >> /opt/postfix.sh <<EOF
-#!/bin/bash
-service postfix start
-tail -f /var/log/mail.log
-EOF
-chmod +x /opt/postfix.sh
 postconf -e myhostname=$maildomain
 postconf -F '*/*/chroot = n'
 
@@ -78,6 +94,10 @@ fi
 cat >> /etc/supervisor/conf.d/supervisord.conf <<EOF
 
 [program:opendkim]
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
 command=/usr/sbin/opendkim -f
 EOF
 # /etc/postfix/main.cf
