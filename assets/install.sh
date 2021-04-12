@@ -31,11 +31,12 @@ EOF
 cat > /etc/rsyslog.conf <<EOF
 module(load="imuxsock") # provides support for local system logging
 
-\$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+\$template messageOnly,"%msg%\n"
+\$ActionFileDefaultTemplate messageOnly
 \$WorkDirectory /var/spool/rsyslog
 
 # Actions
-*.* -/dev/stdout # send everything to stdout
+*.* -/dev/stdout   # send everything to stdout
 EOF
 
 
